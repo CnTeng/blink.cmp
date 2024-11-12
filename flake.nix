@@ -9,7 +9,8 @@
   };
 
   outputs = inputs@{ flake-parts, nixpkgs, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
+    flake-parts.lib.mkFlake { inherit inputs; } 
+      ({ withSystem, ... }: {
       systems =
         [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
 
@@ -95,5 +96,16 @@
           ];
         };
       };
-    };
+
+      flake.overlays.default = final: prev:
+        withSystem prev.stdenv.hostPlatform.system (
+          { config, ... }: {
+            vimPlugins = prev.vimPlugins.extend (
+              _: _: {
+                blink-cmp = config.packages.blink-cmp;
+              }
+            );
+          }
+        );
+    });
 }
